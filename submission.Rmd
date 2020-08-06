@@ -1,0 +1,58 @@
+---
+title: "Activity_Monitoring"
+author: "Naing Aung"
+date: "8/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Course Assignment Submission
+
+The first step is to unzip the given file "activity.zip"
+```{r first step}
+unzip("activity.zip")
+```
+
+Then it is read into R and its contents examined
+```{r reading into R}
+dat <- read.csv("activity.csv")
+head(dat)
+tail(dat)
+dim(dat)
+```
+
+**Data Processing**  
+Below is the steps taken to prepare the data for the assignment
+```{r processing}
+library(lubridate)
+library(tidyverse)
+dat$date <- ymd(dat$date)
+dat <- dat %>%
+        filter(!is.na(steps)) %>%
+        group_by(date) %>%
+        mutate(total_steps = sum(steps))
+dat1 <- data.frame(date=unique(dat$date), total_steps=unique(dat$total_steps))
+```
+
+**Plotting**  
+The following histogram shows the frequency distribution of the daily total steps
+```{r plotting}
+ggplot(data = dat1) +
+        geom_histogram(aes(total_steps), binwidth = 600,
+                       color = "black", fill = "sky blue") +
+        xlab("Daily Total Steps") +
+        ylab("Frequency")
+```
+
+**Calculating "mean" and "median"**  
+The mean and median of the total numbers of steps taken per days are calculated below
+```{r mean and median}
+cat("Mean is", mean(dat1$total_steps))
+cat("Median is", median(dat1$total_steps))
+```
+
+
+
