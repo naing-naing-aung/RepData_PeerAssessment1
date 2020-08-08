@@ -6,20 +6,134 @@ output:
 ---
 
 
-## Loading and preprocessing the data
+## Loading and preprocessing the data  
+The first step is to unzip the given file "activity.zip"
+```{r first_step}
+unzip("activity.zip")
+```
+
+Then it is read into R and its contents examined
+```{r reading_into_R}
+dat <- read.csv("activity.csv")
+head(dat)
+tail(dat)
+dim(dat)
+```
+
+**Data Processing**  
+Below is the steps taken to prepare the data for the assignment
+```{r processing}
+library(lubridate)
+library(tidyverse)
+dat$date <- ymd(dat$date)
+dat1 <- dat %>%
+        filter(!is.na(steps)) %>%
+        group_by(date) %>%
+        mutate(total_steps = sum(steps))
+histo <- data.frame(date=unique(dat1$date), total_steps=unique(dat1$total_steps))
+```
+
+**Plotting**  
+The following histogram shows the frequency distribution of the daily total steps
+```{r plotting}
+ggplot(data = histo) +
+        geom_histogram(aes(total_steps), binwidth = 600,
+                       color = "black", fill = "sky blue") +
+        xlab("Daily Total Steps") +
+        ylab("Frequency")
+```
 
 
 
-## What is mean total number of steps taken per day?
+## What is mean total number of steps taken per day?  
+**Calculating "mean" and "median"**  
+The mean and median of the total numbers of steps taken per days are calculated below
+```{r mean and median}
+cat("Mean is", mean(histo$total_steps))
+cat("Median is", median(histo$total_steps))
+```
 
 
 
 ## What is the average daily activity pattern?
+**Time Series Plot**  
+```{r Time_Series_Plot}
+daily <- dat1 %>%
+        ungroup %>%
+        group_by(interval) %>%
+        mutate(interval_mean = mean(steps)) %>%
+        arrange(desc(interval_mean))
+ggplot(daily, aes(interval, interval_mean)) +
+        geom_line(color = "Purple") +
+        labs(x = "Interval", y = "Average Daily Steps") +
+        ggtitle("Time Series Plot")
+```
 
+**The 5-minute interval which contains the maximum number of steps is**
+```{r max_interval_mean}
+cat("The 5-minute interval with maximum steps is", daily$interval[1])
+```
 
 
 ## Imputing missing values
+**Imputation of missing values are done by mean of th interval across all days**
+```{r imputation}
+cat("The total number of missing value is,", sum(is.na(dat)))
+dat2 <- dat %>%
+        group_by(interval) %>%
+        mutate(interval_mean = mean(steps, na.rm = TRUE))
+imputed <- data.frame(sapply(dat2,
+                             function(x) ifelse(is.na(x),
+                                                dat2$interval_mean, x)))
+imputed$steps <- as.double(imputed$steps)
+imputed$date <- as.POSIXlt.Date(imputed$date)
+imputed$interval_mean <- as.double(imputed$interval_mean)
+
+head(imputed)
+tail(imputed)
+dim(imputed)
+```
+
+**Histogram from Imputed Data frame**
+```{r histogram}
+imputed$date <- ymd(imputed$date)
+
+dat3 <- imputed %>%
+  group_by(date) %>%
+  mutate(total_steps = sum(steps))
+
+histo_imputed <- dat3[!duplicated(dat3$date),]
+
+ggplot(data = histo_imputed) +
+        geom_histogram(aes(total_steps), binwidth = 600,
+                       color = "black", fill = "sky blue") +
+        xlab("Daily Total Steps") +
+        ylab("Frequency")
+
+cat("Mean after imputation is", mean(dat3$total_steps))
+cat("Median after imputation is", median(dat3$total_steps))
+```
+
+After imputation, median and mean became equal.  
+
 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r weekdays}
+week_days <- dat3 %>%
+  ungroup() %>%
+  mutate(is_weekend = ifelse((weekdays(date)=="Saturday" | weekdays(date)=="Sunday"),
+                             "Weekend", "Weekdays"))
+week_days$is_weekend <- as.factor(week_days$is_weekend)
+dat4 <- week_days %>%
+  group_by(interval) %>%
+  mutate(interval_mean = mean(steps))
+
+ggplot(dat4, aes(interval, interval_mean)) +
+  geom_line(color = "Purple") +
+        labs(x = "Interval", y = "Average Daily Steps") +
+        ggtitle("Time Series Plot after Imputation") +
+  facet_wrap(. ~ is_weekend)
+```
+
