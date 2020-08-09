@@ -277,14 +277,15 @@ week_days <- dat3 %>%
                              "Weekend", "Weekdays"))
 week_days$is_weekend <- as.factor(week_days$is_weekend)
 dat4 <- week_days %>%
-  group_by(interval) %>%
+  group_by(interval, is_weekend) %>%
   mutate(interval_mean = mean(steps))
 
-ggplot(dat4, aes(interval, interval_mean)) +
-  geom_line(color = "Purple") +
+ggplot(dat4, aes(interval, interval_mean, color = is_weekend)) +
+  geom_line() +
         labs(x = "Interval", y = "Average Daily Steps") +
         ggtitle("Time Series Plot after Imputation") +
   facet_wrap(. ~ is_weekend)
 ```
 
 ![](PA1_template_files/figure-html/weekdays-1.png)<!-- -->
+
