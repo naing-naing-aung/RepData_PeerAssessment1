@@ -417,7 +417,7 @@ dat1 &lt;- dat %&gt;%
         filter(!is.na(steps)) %&gt;%
         group_by(date) %&gt;%
         mutate(total_steps = sum(steps))
-histo &lt;- data.frame(date=unique(dat1$date), total_steps=unique(dat1$total_steps))</code></pre>
+histo &lt;- dat1[!duplicated(dat1$date),]</code></pre>
 <p><strong>Plotting</strong><br />
 The following histogram shows the frequency distribution of the daily total steps</p>
 <pre class="r"><code>ggplot(data = histo) +

@@ -30,7 +30,7 @@ dat1 <- dat %>%
         filter(!is.na(steps)) %>%
         group_by(date) %>%
         mutate(total_steps = sum(steps))
-histo <- data.frame(date=unique(dat1$date), total_steps=unique(dat1$total_steps))
+histo <- dat1[!duplicated(dat1$date),]
 ```
 
 **Plotting**  
